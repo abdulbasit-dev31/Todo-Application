@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Abdul Basit">
+<meta name="description" content="TaskFlow Pro - a full-featured task manager by Abdul Basit">
+<title>TaskFlow Pro | Abdul Basit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+  <header class="hdr">
+    <div><h1>📋 TaskFlow <span class="badge-pro">Pro</span></h1><p class="sub">Manage your tasks efficiently</p></div>
+    <div class="hdr-r">
+      <button class="btn-icon" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+      <details class="menu" id="dataMenu">
+        <summary class="btn-icon" title="Data & tools" aria-label="Data and tools">⋯</summary>
+        <div class="menu-pop">
+          <button id="undoBtn">↩️ Undo last action</button>
+          <button id="expJson">⬇️ Export backup (JSON)</button>
+          <button id="expCsv">📄 Export as CSV</button>
+          <button id="impBtn">⬆️ Import backup (JSON)</button>
+          <button id="clearDone">✅ Clear completed</button>
+          <button id="printBtn">🖨️ Print list</button>
+        </div>
+      </details>
+      <input type="file" id="impFile" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <div class="alert" id="alertBar" hidden></div>
+
+  <section class="stats" aria-label="Statistics">
+    <div class="stat"><span class="stat-i">📊</span><div><div class="stat-l">Total</div><div class="stat-n" id="totalStats">0</div></div></div>
+    <div class="stat"><span class="stat-i">⏳</span><div><div class="stat-l">Active</div><div class="stat-n" id="activeStats">0</div></div></div>
+    <div class="stat"><span class="stat-i">✅</span><div><div class="stat-l">Completed</div><div class="stat-n" id="completedStats">0</div></div></div>
+    <div class="stat"><span class="stat-i">🔴</span><div><div class="stat-l">High Priority</div><div class="stat-n" id="highStats">0</div></div></div>
+    <div class="stat"><span class="stat-i">📈</span><div><div class="stat-l">Progress</div><div class="stat-n" id="progressStats">0%</div></div><div class="mini"><i id="miniFill"></i></div></div>
+  </section>
+
+  <div class="bar">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-filter="all">All</button>
+      <button class="tab" data-filter="active">Active</button>
+      <button class="tab" data-filter="completed">Completed</button>
+      <button class="tab" data-filter="high">🔴 High Priority</button>
+      <button class="tab" data-filter="today">📅 Today</button>
+      <button class="tab" data-filter="overdue">⚠️ Overdue</button>
+    </div>
+    <div class="bar-r">
+      <select id="catFilter" class="field" aria-label="Filter by category"></select>
+      <input type="text" id="searchInput" class="field" placeholder="🔍 Search tasks...  ( / )" aria-label="Search tasks">
+    </div>
+  </div>
+
+  <div class="add">
+    <input type="text" id="taskInput" class="field" placeholder="What needs to be done?  ( N )" maxlength="200" aria-label="New task">
+    <select id="catSelect" class="field" aria-label="Category"></select>
+    <select id="prioritySelect" class="field" aria-label="Priority">
+      <option value="low">🟢 Low</option><option value="medium" selected>🟡 Medium</option><option value="high">🔴 High</option>
+    </select>
+    <input type="date" id="dueDateInput" class="field" aria-label="Due date">
+    <select id="repeatSelect" class="field" aria-label="Repeat">
+      <option value="none">🔁 No repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
+    </select>
+    <button class="btn btn-primary" id="addTaskBtn">➕ Add Task</button>
+  </div>
+
+  <div class="ctrl">
+    <span class="count" id="taskCount" aria-live="polite">0 tasks</span>
+    <div class="sorts">
+      <span>Sort by:</span>
+      <button class="sort active" data-sort="date">📅 Date</button>
+      <button class="sort" data-sort="priority">⭐ Priority</button>
+      <button class="sort" data-sort="status">✅ Status</button>
+      <button class="sort" data-sort="alpha">🔤 A–Z</button>
+      <button class="sort" data-sort="manual">↕️ Manual</button>
+    </div>
+  </div>
+
+  <ul class="list" id="taskList"></ul>
+
+  <div class="foot">
+    <span class="credit">Built by Abdul Basit · <kbd>/</kbd> search · <kbd>N</kbd> new · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo</span>
+    <button class="btn btn-danger" id="clearAllBtn">🗑️ Clear All</button>
+  </div>
+</main>
+
+<!-- Edit modal -->
+<div class="modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="mc">
+    <div class="mh"><h3 id="editTitle">✏️ Edit Task</h3><button class="x" id="modalClose" aria-label="Close">&times;</button></div>
+    <div class="mb">
+      <input type="text" id="editTaskInput" class="field" placeholder="Task description" maxlength="200">
+      <textarea id="editNotes" class="field" placeholder="Notes (optional)" maxlength="500"></textarea>
+      <div class="row">
+        <div><label for="editCat">Category</label><select id="editCat" class="field" style="width:100%"></select></div>
+        <div><label for="editPriority">Priority</label><select id="editPriority" class="field" style="width:100%"><option value="low">🟢 Low</option><option value="medium">🟡 Medium</option><option value="high">🔴 High</option></select></div>
+      </div>
+      <div class="row">
+        <div><label for="editDue">Due date</label><input type="date" id="editDue" class="field" style="width:100%"></div>
+        <div><label for="editRepeat">Repeat</label><select id="editRepeat" class="field" style="width:100%"><option value="none">No repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+      </div>
+      <label>Subtasks</label>
+      <ul class="subs" id="subList"></ul>
+      <input type="text" id="subInput" class="field" placeholder="Add a subtask and press Enter" maxlength="120">
+    </div>
+    <div class="mf"><button class="btn btn-outline" id="modalCancel">Cancel</button><button class="btn btn-primary" id="modalSave">💾 Save Changes</button></div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal" id="confirmModal" role="alertdialog" aria-modal="true" aria-labelledby="cTitle">
+  <div class="mc" style="max-width:400px">
+    <div class="mh"><h3 id="cTitle">Are you sure?</h3></div>
+    <p id="cMsg" style="color:var(--text-secondary)"></p>
+    <div class="mf"><button class="btn btn-outline" id="cNo">Cancel</button><button class="btn btn-danger" id="cYes">Confirm</button></div>
+  </div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
